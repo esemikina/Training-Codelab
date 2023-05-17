@@ -34,12 +34,16 @@ class DatabaseConnection:
         try:
             # TODO (5.3.2)  
             # insert sql query
+            query = "INSERT INTO {} VALUES (?, ?)".format(TABLE_NAME)
 
             # execute sql query
+            cursor.execute(query, (bitcoin.timestamp, bitcoin.price))
 
-            # commit to db
+            # commit
+            self.__db.commit()
 
             # close
+            cursor.close()
 
             return True
         except Exception as e:
@@ -60,20 +64,27 @@ class DatabaseConnection:
             
             # TODO (5.3.1)
             # get cursor
-            
+            cursor = self.__db.cursor()
             
             # insert sql query
-             
+            query = "SELECT * FROM {};".format(TABLE_NAME)
 
             # execute sql query
-           
+            cursor.execute(query)
 
             # fetch all results obtained
-            
+            res = cursor.fetchall()
+
             # close
+            cursor.close()
 
             # convert results to BitcoinTimestamp objects and append to output
-
+            for result in res:
+                timestamp = result[0]   # replace with the actual name of the timestamp field in your query results
+                price = result[1]   # replace with the actual name of the price field in your query results
+                bitcoin_timestamp = BitcoinTimestamp(timestamp, price)
+                output.append(bitcoin_timestamp.to_json())
+                
             return output
         except Error as e:
             print(e)

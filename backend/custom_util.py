@@ -1,20 +1,29 @@
 import sqlite3
 from sqlite3 import Error
 from constants import DATABASE_NAME, TABLE_NAME, BITCOIN_CURRENT_PRICE_URL
+from fastapi import HTTPException
 from datetime import datetime
 import requests
 
-# TODO (5.1) 
-def get_live_bitcoin_price():
-    """
-    gets live price of bitcoin from bitcoin open API
 
-    :return:
-        the price in USD
-    :rtype:
-        float
-    """
-    pass
+def request_url(url):
+    try:
+        res = requests.get(url)
+        return res
+    except requests.exceptions.RequestException as e:
+        return f"Error: {e}"
+
+
+# TODO (5.1)
+def get_live_bitcoin_price():
+    try:
+        data = request_url(BITCOIN_CURRENT_PRICE_URL).json()
+        price = data['bpi']['USD']['rate'].replace(',', '')
+        return float(price)
+    except requests.exceptions.RequestException as e:
+        print(e)
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 def create_database():
     """
@@ -28,7 +37,7 @@ def create_database():
 
     # connects to the database if it exists, if not then creates a new database
     try:
-        db = sqlite3.connect(DATABASE_NAME)
+        db = sqlite3.connect(DATABASE_NAME, check_same_thread=False)
     except Error as e:
         print(e)
 
@@ -45,6 +54,7 @@ def create_database():
 
     return db
 
+
 def convert_text_to_date(date_text: str):
     """
     converts dates from a string to datetime object
@@ -60,6 +70,7 @@ def convert_text_to_date(date_text: str):
     """
     return datetime.strptime(date_text, '%Y-%m-%d %H:%M:%S')
 
+
 def convert_date_to_text(date: datetime):
     """
     converts dates from a string to datetime object
@@ -74,6 +85,7 @@ def convert_date_to_text(date: datetime):
         datetime
     """
     return date.strftime("%Y-%m-%d %H:%M:%S")
+
 
 if __name__ == '__main__':
     create_database()
